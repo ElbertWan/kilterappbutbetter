@@ -24,6 +24,12 @@
 .DS_Store
 *.pem
 
+# kilter data artifacts (extracted from APK; regenerate with scripts/)
+/data
+*.sqlite3
+*.xapk
+*.apk
+
 # debug
 npm-debug.log*
 yarn-debug.log*
@@ -39,3 +45,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local Netlify folder
+.netlify
