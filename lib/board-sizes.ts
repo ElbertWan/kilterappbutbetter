@@ -64,3 +64,69 @@ const NATIVE_UUID_TO_SIZE: Record<string, BoardSizeLabel> = {
 export function sizeForLayoutUuid(uuid: string): BoardSizeLabel | null {
   return NATIVE_UUID_TO_SIZE[uuid] ?? null;
 }
+
+// ---------------------------------------------------------------------------
+// Board types for browsing/filtering.
+//
+// The catalog holds climbs for several products, but only Kilter Board Original
+// and Kilter Board Homewall have meaningful volume. Each type maps to a coarse
+// `climbs.layout_id` (see lib/layout-resolve.ts) and exposes selectable sizes.
+// A size's `edges` are its physical mounting-hole bounds (from
+// lib/board-layouts.json); a climb "fits" a size when the board fully contains
+// the climb's bounding box. Homewall sizes use the Full Ride LED layouts.
+// ---------------------------------------------------------------------------
+
+export type BoardTypeId = 'Original' | 'Homewall';
+
+interface BoardTypeSize {
+  label: string;
+  layoutUuid: string;
+  edges: { left: number; right: number; bottom: number; top: number };
+}
+
+export interface BoardTypeDef {
+  id: BoardTypeId;
+  productName: string;
+  layoutId: number;
+  sizes: BoardTypeSize[];
+}
+
+export const BOARD_TYPES: BoardTypeDef[] = [
+  {
+    id: 'Original',
+    productName: 'Kilter Board Original',
+    layoutId: 1,
+    sizes: [
+      { label: '7x10', layoutUuid: '14', edges: { left: 28, right: 116, bottom: 36, top: 156 } },
+      { label: '8x12', layoutUuid: '8', edges: { left: 24, right: 120, bottom: 0, top: 156 } },
+      { label: '12x12', layoutUuid: '10', edges: { left: 0, right: 144, bottom: 0, top: 156 } },
+      { label: '16x12', layoutUuid: '28', edges: { left: -24, right: 168, bottom: 0, top: 156 } },
+    ],
+  },
+  {
+    id: 'Homewall',
+    productName: 'Kilter Board Homewall',
+    layoutId: 8,
+    sizes: [
+      { label: '7x10', layoutUuid: '17', edges: { left: -44, right: 44, bottom: 24, top: 144 } },
+      { label: '8x12', layoutUuid: '23', edges: { left: -44, right: 44, bottom: -12, top: 144 } },
+      { label: '10x10', layoutUuid: '21', edges: { left: -56, right: 56, bottom: 24, top: 144 } },
+      { label: '10x12', layoutUuid: '25', edges: { left: -56, right: 56, bottom: -12, top: 144 } },
+    ],
+  },
+];
+
+export function isBoardTypeId(value: string): value is BoardTypeId {
+  return BOARD_TYPES.some((t) => t.id === value);
+}
+
+export function boardTypeById(id: string): BoardTypeDef | undefined {
+  return BOARD_TYPES.find((t) => t.id === id);
+}
+
+export function boardSizeEdges(
+  typeId: string,
+  sizeLabel: string
+): BoardTypeSize['edges'] | undefined {
+  return boardTypeById(typeId)?.sizes.find((s) => s.label === sizeLabel)?.edges;
+}

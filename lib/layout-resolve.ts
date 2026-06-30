@@ -53,13 +53,6 @@ interface Edges {
 const area = (l: Layout) =>
   (l.edgeRight - l.edgeLeft) * (l.edgeTop - l.edgeBottom);
 
-// The canonical full-size board to show per product, in order of preference, so
-// climbs render on the board people expect (e.g. the standard 12x12) rather than
-// whatever small board happens to bound the holds. Hold coordinates are shared
-// across a product's sizes, so a larger board still positions holds correctly.
-//   Original: 12x12 w/ kickboard → 12x14 (taller) → 16x12 (wider)
-//   Homewall: 12x12 → 16x12
-//   UP Board: with kickboard → without
 // Keys are product_size ids (see lib/board-layouts.json). Listed in order of
 // preference so climbs render on the board people expect: the canonical full
 // board first, then progressively larger fallbacks. Hold coordinates are shared

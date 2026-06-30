@@ -69,19 +69,36 @@ const rows = db
             ps.id AS size_id, ps.name AS size_name, ps.description AS size_desc,
             ps.edge_left, ps.edge_right, ps.edge_bottom, ps.edge_top,
             ps.image_filename AS frame_image,
+            psls.layout_id, l.is_listed AS layout_listed,
             psls.set_id, psls.image_filename AS holds_image
        FROM product_sizes ps
        JOIN products pr ON pr.id = ps.product_id
        JOIN product_sizes_layouts_sets psls ON psls.product_size_id = ps.id
        JOIN layouts l ON l.id = psls.layout_id
-      WHERE l.is_listed = 1 AND psls.is_listed = 1 AND ps.is_listed = 1
+      WHERE psls.is_listed = 1 AND ps.is_listed = 1
       ORDER BY ps.id, psls.set_id`
   )
   .all();
 db.close();
 
+// Each product_size can be rendered for more than one layout (e.g. Tycho has a
+// listed and an unlisted layout). Prefer the listed layout; otherwise take the
+// lowest layout id deterministically. Then collect that layout's hold overlays.
+const bestLayout = new Map();
+for (const r of rows) {
+  const cur = bestLayout.get(r.size_id);
+  if (
+    !cur ||
+    r.layout_listed > cur.layout_listed ||
+    (r.layout_listed === cur.layout_listed && r.layout_id < cur.layout_id)
+  ) {
+    bestLayout.set(r.size_id, { layout_id: r.layout_id, layout_listed: r.layout_listed });
+  }
+}
+
 const groups = new Map();
 for (const r of rows) {
+  if (r.layout_id !== bestLayout.get(r.size_id).layout_id) continue;
   if (!groups.has(r.size_id)) groups.set(r.size_id, { meta: r, layers: [] });
   groups.get(r.size_id).layers.push(r.holds_image);
 }

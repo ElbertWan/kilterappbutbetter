@@ -1,11 +1,12 @@
 // Regenerates lib/mounting-holes.json from the bundled Kilter SQLite database.
 //
-// The board viewer maps a climb's `frames` (a list of `p{placement_id}r{role}`
-// pairs) to physical x/y board coordinates. The authoritative mapping is
-//   placements.id -> placements.hole_id -> holes.(x, y)
-// keyed per product (holes.product_id -> products.name). Placement ids are
-// global and unique, and the imported climbs come from this same database, so
-// this is the correct coordinate source for every live climb.
+// The board viewer maps a climb's `frames` (a list of `h{hole_id}p{role}`
+// pairs, as emitted by the Portal REST API) to physical x/y board coordinates.
+// The first number is a mounting-hole id, so the authoritative mapping is
+//   holes.id -> holes.(x, y)
+// keyed per product (holes.product_id -> products.name). Hole ids are global and
+// unique, and the live climbs reference these same ids, so this is the correct
+// coordinate source for every climb.
 //
 // Prereq: data/db.sqlite3 exists (run scripts/extract-db.mjs first).
 //
@@ -25,17 +26,16 @@ const sqlite = new Database(sqlitePath, { readonly: true });
 
 const rows = sqlite
   .prepare(
-    `SELECT pr.name AS product, p.id AS placement_id, h.x AS x, h.y AS y
-       FROM placements p
-       JOIN holes h ON h.id = p.hole_id
+    `SELECT pr.name AS product, h.id AS hole_id, h.x AS x, h.y AS y
+       FROM holes h
        JOIN products pr ON pr.id = h.product_id`
   )
   .all();
 
 const byProduct = {};
-for (const { product, placement_id, x, y } of rows) {
+for (const { product, hole_id, x, y } of rows) {
   if (!byProduct[product]) byProduct[product] = {};
-  byProduct[product][placement_id] = [x, y];
+  byProduct[product][hole_id] = [x, y];
 }
 
 const out = {};
@@ -52,7 +52,7 @@ for (const [product, holes] of Object.entries(byProduct)) {
   }
   out[product] = { extent: [minX, maxX, minY, maxY], holes };
   console.log(
-    `${product}: ${Object.keys(holes).length} placements, extent [${minX}, ${maxX}, ${minY}, ${maxY}]`
+    `${product}: ${Object.keys(holes).length} holes, extent [${minX}, ${maxX}, ${minY}, ${maxY}]`
   );
 }
 

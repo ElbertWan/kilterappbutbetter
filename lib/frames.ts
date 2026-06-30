@@ -1,6 +1,9 @@
-// The Kilter `frames` column encodes holds as "p{placement_id}r{role_id}" pairs,
-// e.g. "p1176r12p1192r15". The numeric placement id keys the physical x/y
-// coordinates in lib/mounting-holes.json.
+// The Kilter `frames` column encodes a climb's holds. Two encodings exist:
+//   - Portal REST API (current sync):  "h{hole_id}p{role_id}",      e.g. "h1138p15h1581p12"
+//   - Legacy APK snapshot:             "p{placement_id}r{role_id}", e.g. "p1176r12p1192r15"
+// The first number keys the physical x/y coordinates in lib/mounting-holes.json
+// (the REST `h` id is a mounting-hole id; that file is keyed accordingly) and the
+// second number is the role id.
 //
 // Role IDs are assigned per product (see the `placement_roles` table), but every
 // board follows the same start / middle / finish / foot ordering:
@@ -32,8 +35,11 @@ export interface Hold {
 export function parseClimbConcat(concat: string | null | undefined): Hold[] {
   if (!concat) return [];
 
+  // Current REST encoding ("h{placement}p{role}"); fall back to the legacy APK
+  // encoding ("p{placement}r{role}") for any older rows.
+  const re = /h(\d+)p(\d+)/.test(concat) ? /h(\d+)p(\d+)/g : /p(\d+)r(\d+)/g;
+
   const holds: Hold[] = [];
-  const re = /p(\d+)r(\d+)/g;
   let match: RegExpExecArray | null;
 
   while ((match = re.exec(concat)) !== null) {

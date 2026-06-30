@@ -61,7 +61,8 @@ export interface ClimbFilters {
   name?: string;
   setter?: string;
   angle?: number;
-  boardSize?: '7x10' | '8x12' | '12x12' | '16x12';
+  boardType?: 'Original' | 'Homewall';
+  boardSize?: '7x10' | '8x12' | '12x12' | '16x12' | '10x10' | '10x12';
   page?: number;
   limit?: number;
 }

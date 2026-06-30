@@ -25,6 +25,19 @@ type Layout = {
 const HOLES = mountingHoles as unknown as Record<string, BoardData>;
 const LAYOUTS = boardLayouts as Record<string, Layout>;
 
+// Hole ids are globally unique across products, so a merged lookup is a safe
+// fallback if a climb's resolved product is ever slightly off — every hole still
+// maps to its one physical coordinate.
+const FLAT_HOLES: Record<string, [number, number]> = (() => {
+  const flat: Record<string, [number, number]> = {};
+  for (const board of Object.values(HOLES)) {
+    for (const [id, xy] of Object.entries(board.holes)) {
+      if (!flat[id]) flat[id] = xy;
+    }
+  }
+  return flat;
+})();
+
 // Requested colour convention.
 const ROLE_COLORS: Record<string, string> = {
   start: '#22c55e',  // green  — starting holds
@@ -75,7 +88,8 @@ export function BoardViewer({ climb }: BoardViewerProps) {
         <image href={layout.image} x={0} y={0} width={W} height={H} />
 
         {holds.map((hold, idx) => {
-          const coord = board.holes[String(hold.position)];
+          const coord =
+            board.holes[String(hold.position)] ?? FLAT_HOLES[String(hold.position)];
           if (!coord) return null;
           const [cx, cy] = toPx(coord[0], coord[1]);
           return (

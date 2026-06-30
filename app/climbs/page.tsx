@@ -38,6 +38,7 @@ export default function ClimbsPage() {
         if (filters.verified) params.append('verified', 'true');
         if (filters.sortBy) params.append('sortBy', filters.sortBy);
         if (filters.angle !== undefined) params.append('angle', filters.angle.toString());
+        if (filters.boardType) params.append('boardType', filters.boardType);
         if (filters.boardSize) params.append('boardSize', filters.boardSize);
         if (filters.name) params.append('name', filters.name);
         if (filters.setter) params.append('setter', filters.setter);
@@ -93,6 +94,7 @@ export default function ClimbsPage() {
         verified: filters.verified,
         sortBy: filters.sortBy,
         angle: filters.angle,
+        boardType: filters.boardType,
         boardSize: filters.boardSize,
       };
       localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(persisted));

@@ -2,7 +2,7 @@
 
 import { ClimbFilters } from '@/types';
 import { V_GRADES } from '@/lib/grades';
-import { BOARD_SIZES, BoardSizeLabel } from '@/lib/board-sizes';
+import { BOARD_TYPES, BoardTypeId } from '@/lib/board-sizes';
 import {
   Sheet,
   SheetContent,
@@ -41,10 +41,22 @@ export function ClimbFiltersPanel({ filters, onFilterChange }: ClimbFiltersProps
     onFilterChange({ ...filters, angle: value === -1 ? undefined : value });
   };
 
-  const handleBoardSizeChange = (value: BoardSizeLabel) => {
+  const handleBoardTypeChange = (value: BoardTypeId | undefined) => {
+    // Switching board type clears any size selection, since sizes differ per type.
     onFilterChange({
       ...filters,
-      boardSize: filters.boardSize === value ? undefined : value,
+      boardType: filters.boardType === value ? undefined : value,
+      boardSize: undefined,
+    });
+  };
+
+  const handleBoardSizeChange = (value: string) => {
+    onFilterChange({
+      ...filters,
+      boardSize:
+        filters.boardSize === value
+          ? undefined
+          : (value as ClimbFilters['boardSize']),
     });
   };
 
@@ -58,8 +70,11 @@ export function ClimbFiltersPanel({ filters, onFilterChange }: ClimbFiltersProps
     filters.minAscents ||
     filters.verified ||
     filters.angle !== undefined ||
+    filters.boardType !== undefined ||
     filters.boardSize !== undefined ||
     (filters.sortBy && filters.sortBy !== 'newest');
+
+  const selectedType = BOARD_TYPES.find((t) => t.id === filters.boardType);
 
   const ANGLES = [-1, 0, 10, 20, 30, 40, 50, 60, 70];
   const ASCENT_OPTIONS = [
@@ -160,35 +175,70 @@ export function ClimbFiltersPanel({ filters, onFilterChange }: ClimbFiltersProps
             </button>
           </div>
 
-          {/* Board Size */}
+          {/* Board */}
           <div>
-            <p className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-400">Board Size</p>
+            <p className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-400">Board</p>
             <div className="flex flex-wrap gap-1.5">
               <button
-                onClick={() => onFilterChange({ ...filters, boardSize: undefined })}
+                onClick={() => handleBoardTypeChange(undefined)}
                 className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                  filters.boardSize === undefined
+                  filters.boardType === undefined
                     ? 'bg-gray-900 text-white'
                     : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800'
                 }`}
               >
                 Any
               </button>
-              {BOARD_SIZES.map(({ label }) => (
+              {BOARD_TYPES.map((type) => (
                 <button
-                  key={label}
-                  onClick={() => handleBoardSizeChange(label)}
+                  key={type.id}
+                  onClick={() => handleBoardTypeChange(type.id)}
                   className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                    filters.boardSize === label
+                    filters.boardType === type.id
                       ? 'bg-gray-900 text-white'
                       : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800'
                   }`}
                 >
-                  {label}
+                  {type.id}
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-xs text-gray-400">Kilter Board Original climbs that fit the selected board</p>
+
+            {selectedType && (
+              <div className="mt-3">
+                <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-gray-300">Size</p>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    onClick={() => onFilterChange({ ...filters, boardSize: undefined })}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                      filters.boardSize === undefined
+                        ? 'bg-gray-900 text-white'
+                        : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800'
+                    }`}
+                  >
+                    Any
+                  </button>
+                  {selectedType.sizes.map(({ label }) => (
+                    <button
+                      key={label}
+                      onClick={() => handleBoardSizeChange(label)}
+                      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                        filters.boardSize === label
+                          ? 'bg-gray-900 text-white'
+                          : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <p className="mt-2 text-xs text-gray-400">
+              {selectedType
+                ? `${selectedType.productName} climbs${filters.boardSize ? ' that fit the selected size' : ''}`
+                : 'Filter by board type, then optionally a size'}
+            </p>
           </div>
 
           {/* Sort */}

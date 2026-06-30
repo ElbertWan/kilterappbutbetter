@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getGradeRange } from '@/lib/grades';
-import { BOARD_SIZES, isBoardSizeLabel } from '@/lib/board-sizes';
+import { boardTypeById, isBoardTypeId } from '@/lib/board-sizes';
 import {
   resolveProductLayoutUuid,
   productNameForLayout,
@@ -82,11 +82,10 @@ export async function GET(request: NextRequest) {
       : undefined;
     const name = searchParams.get('name')?.toLowerCase() || undefined;
     const setter = searchParams.get('setter')?.toLowerCase() || undefined;
-    const boardSizeParam = searchParams.get('boardSize') || undefined;
-    const boardSize =
-      boardSizeParam && isBoardSizeLabel(boardSizeParam)
-        ? boardSizeParam
-        : undefined;
+    const boardTypeParam = searchParams.get('boardType') || undefined;
+    const boardType =
+      boardTypeParam && isBoardTypeId(boardTypeParam) ? boardTypeParam : undefined;
+    const boardSize = searchParams.get('boardSize') || undefined;
     const page = parseInt(searchParams.get('page') || '0');
     const limit = parseInt(searchParams.get('limit') || '20');
 
@@ -110,15 +109,21 @@ export async function GET(request: NextRequest) {
 
     const where: string[] = [];
 
-    if (boardSize !== undefined) {
-      const board = BOARD_SIZES.find((b) => b.label === boardSize)!;
-      where.push(
-        `c.layout_id = 1
-         AND ${p(board.edges.left)} <= c.edge_left
-         AND ${p(board.edges.right)} >= c.edge_right
-         AND ${p(board.edges.bottom)} <= c.edge_bottom
-         AND ${p(board.edges.top)} >= c.edge_top`
-      );
+    if (boardType !== undefined) {
+      const type = boardTypeById(boardType)!;
+      const conds = [`c.layout_id = ${p(type.layoutId)}`];
+      const size = boardSize
+        ? type.sizes.find((s) => s.label === boardSize)
+        : undefined;
+      if (size) {
+        conds.push(
+          `${p(size.edges.left)} <= c.edge_left
+           AND ${p(size.edges.right)} >= c.edge_right
+           AND ${p(size.edges.bottom)} <= c.edge_bottom
+           AND ${p(size.edges.top)} >= c.edge_top`
+        );
+      }
+      where.push(conds.join(' AND '));
     } else if (productName !== undefined) {
       const ids = layoutIdsForProduct(productName);
       if (ids && ids.length) {
