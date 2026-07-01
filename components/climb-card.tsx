@@ -7,15 +7,16 @@ import { Star } from 'lucide-react';
 
 interface ClimbCardProps {
   climb: Climb;
+  hrefBase?: string;
 }
 
-export function ClimbCard({ climb }: ClimbCardProps) {
+export function ClimbCard({ climb, hrefBase = '/climbs' }: ClimbCardProps) {
   const difficulty = climb.official_kilter_difficulty || climb.current_difficulty_id;
   const vGrade = difficultyIdToVGrade(difficulty);
   const gradeColor = getGradeColor(vGrade);
 
   return (
-    <Link href={`/climbs/${climb.climb_uuid}`}>
+    <Link href={`${hrefBase}/${climb.climb_uuid}`}>
       <div className="group flex items-center gap-4 border-b border-gray-100 py-4 transition-colors last:border-0 hover:bg-gray-50 px-1 -mx-1 rounded-lg">
         <span className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-bold text-white ${gradeColor}`}>
           {vGrade}

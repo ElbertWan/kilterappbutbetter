@@ -1,0 +1,9 @@
+'use client';
+
+import { use } from 'react';
+import { ClimbDetail } from '@/components/climb-detail';
+
+export default function ArchiveClimbDetailPage({ params }: { params: Promise<{ uuid: string }> }) {
+  const { uuid } = use(params);
+  return <ClimbDetail endpoint="/api/archive-climbs" backHref="/archive" uuid={uuid} />;
+}

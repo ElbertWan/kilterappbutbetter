@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Mountain, Bluetooth, Info } from 'lucide-react';
+import { Mountain, Bluetooth, Info, Archive } from 'lucide-react';
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -18,7 +18,16 @@ export function BottomNav() {
           }`}
         >
           <Mountain className={`h-5 w-5 ${isActive('/climbs') ? 'stroke-[2.5]' : ''}`} />
-          <span>Climbs</span>
+          <span>Current</span>
+        </Link>
+        <Link
+          href="/archive"
+          className={`flex flex-1 flex-col items-center gap-1 py-3 px-4 text-xs font-medium transition-colors ${
+            isActive('/archive') ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          <Archive className={`h-5 w-5 ${isActive('/archive') ? 'stroke-[2.5]' : ''}`} />
+          <span>Archive</span>
         </Link>
         <Link
           href="/connect"
